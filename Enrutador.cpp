@@ -44,7 +44,7 @@ void Enrutador::EliminarEnrutador(bool Manual=false, string _Nombre="")
         {
             auto PosNombre= NombresContiguos.begin();
             auto PosCoste= CostesContiguos.begin();
-            for(string NombreContiguo : NombresContiguos)
+            for(string &NombreContiguo : NombresContiguos)
             {
                 if(NombreContiguo==Nombre)
                 {
@@ -61,7 +61,7 @@ void Enrutador::EliminarEnrutador(bool Manual=false, string _Nombre="")
     {
         auto PosNombre= NombresContiguos.begin();
         auto PosCoste= CostesContiguos.begin();
-        for(string NombreContiguo : NombresContiguos)
+        for(string &NombreContiguo : NombresContiguos)
         {
             if(NombreContiguo==_Nombre)
             {
@@ -79,7 +79,7 @@ void Enrutador::ModificarCoste(string _Nombre, string Valor)
 {
     int i=0;
     bool Dentro=false;
-    for(string Nombre : NombresContiguos)
+    for(string &Nombre : NombresContiguos)
     {
         if(Nombre==_Nombre)
         {

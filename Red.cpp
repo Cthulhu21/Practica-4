@@ -93,12 +93,12 @@ void Red::GuardarRed()
             throw 0;
         }
         auto Pos=1;
-        for(auto Enrutador : Enrutadores)
+        for(auto &[Clave, Valor] : Enrutadores)
         {
-            class Enrutador EnrutadorActual=Enrutador.second;
+            Enrutador EnrutadorActual=Valor;
             Archivo<<EnrutadorActual.NombreEnrutador<<";";
             int i=1;
-            for(string NombreContiguo : EnrutadorActual.NombresContiguos)
+            for(string &NombreContiguo : EnrutadorActual.NombresContiguos)
             {
                 Archivo << NombreContiguo;
                 if(i==int(EnrutadorActual.NombresContiguos.size()))
@@ -110,7 +110,7 @@ void Red::GuardarRed()
                 i++;
             }
             i=1;
-            for(string CosteContiguo : EnrutadorActual.CostesContiguos)
+            for(string &CosteContiguo : EnrutadorActual.CostesContiguos)
             {
                 Archivo << CosteContiguo;
                 if(i==int(EnrutadorActual.CostesContiguos.size()))
@@ -126,6 +126,39 @@ void Red::GuardarRed()
             }
             Pos++;
         }
+        /*for(auto Enrutador : Enrutadores)
+        {
+            class Enrutador EnrutadorActual=Enrutador.second;
+            Archivo<<EnrutadorActual.NombreEnrutador<<";";
+            int i=1;
+            for(string &NombreContiguo : EnrutadorActual.NombresContiguos)
+            {
+                Archivo << NombreContiguo;
+                if(i==int(EnrutadorActual.NombresContiguos.size()))
+                {
+                    Archivo << ";";
+                    break;
+                }
+                Archivo <<"-";
+                i++;
+            }
+            i=1;
+            for(string &CosteContiguo : EnrutadorActual.CostesContiguos)
+            {
+                Archivo << CosteContiguo;
+                if(i==int(EnrutadorActual.CostesContiguos.size()))
+                {
+                    if(Pos!=int(Enrutadores.size()))
+                    {
+                        Archivo << endl;
+                    }
+                    break;
+                }
+                Archivo <<"-";
+                i++;
+            }
+            Pos++;
+        }*/
     }
     catch (int Error)
     {
@@ -161,9 +194,10 @@ void Red::GenerarRed()
     }
     for(int i=0; i<CantidadElementos; i++)
     {
+        //Se eligen los nombres sin repetición del abecedario
         string Nombre=ABC[rand()%ABC.size()];
         auto Pos=ABC.begin();
-        for(string Letra: ABC)
+        for(const string &Letra: ABC)
         {
             if(Letra==Nombre)
             {
@@ -175,7 +209,7 @@ void Red::GenerarRed()
         NuevaRed[Nombre]=Enrutador(Nombre);
         Nombres.push_back(Nombre);
     }
-    for(auto _Enrutador : NuevaRed)
+    for(auto &[Clave, Valor]: NuevaRed)
     {
         int CantidadConexiones;
         do
@@ -183,7 +217,89 @@ void Red::GenerarRed()
             CantidadConexiones=rand()%CantidadElementos;
         }while(CantidadConexiones==0);
         vector<string> _Nombres=Nombres;
-        auto Posicion=_Nombres.begin();
+        vector<string>::iterator Posicion=_Nombres.begin();
+        for(string &_Nombre: _Nombres)
+        {
+            if(_Nombre==Clave)
+            {
+                break;
+            }
+            Posicion++;
+        }
+        _Nombres.erase(Posicion);
+        if(Valor.NombresContiguos.size()!=0)
+        {
+            CantidadConexiones-=Valor.CostesContiguos.size();
+            if(CantidadConexiones<=0)
+                break;
+            int i=Valor.CostesContiguos.size();
+            do
+            {
+                Posicion=_Nombres.begin();
+                for(string& _Nombre : Valor.NombresContiguos)
+                {
+                    for(string &Nombre2 : _Nombres)
+                    {
+                        if(Nombre2==_Nombre)
+                        {
+                            _Nombres.erase(Posicion);
+                            i--;
+                            break;
+                        }
+                        Posicion++;
+                    }
+                }
+            }while(i!=0);
+        }
+        while(CantidadConexiones>0)
+        {
+            string NombreNuevaConexion=_Nombres[rand()%_Nombres.size()];
+            string CosteNuevaConexion=to_string(rand()%26+1);
+            Valor.AgregarEnrutador(false, NombreNuevaConexion, CosteNuevaConexion);
+
+            Posicion=_Nombres.begin();
+            for(string &_Nombre : _Nombres)
+            {
+                if(_Nombre==NombreNuevaConexion)
+                {
+                    break;
+                }
+                Posicion++;
+            }
+            _Nombres.erase(Posicion);
+            CantidadConexiones--;
+        }
+        NuevaRed[Clave]=Valor;
+        vector<string> Costes=Valor.CostesContiguos;
+
+        Posicion=Costes.begin();
+        for(string &_Nombre : Valor.NombresContiguos)
+        {
+            bool Incluido=false;
+            for(string &_Nombre2 : NuevaRed[_Nombre].NombresContiguos)
+            {
+                if(_Nombre2==_Nombre)
+                {
+                    Incluido=true;
+                    break;
+                }
+            }
+            if(!Incluido)
+            {
+                NuevaRed[_Nombre].AgregarEnrutador(false, Clave,*Posicion);
+            }
+            Posicion++;
+        }
+    }
+    /*for(auto _Enrutador: NuevaRed)
+    {
+        int CantidadConexiones;
+        do
+        {
+            CantidadConexiones=rand()%CantidadElementos;
+        }while(CantidadConexiones==0);
+        vector<string> _Nombres=Nombres;
+        vector<string>::iterator Posicion=_Nombres.begin();
         for(string _Nombre: _Nombres)
         {
             if(_Nombre==_Enrutador.first)
@@ -256,9 +372,8 @@ void Red::GenerarRed()
             }
             Posicion++;
         }
-    }
-
-    for(auto _Enrutador : NuevaRed)
+    }*/
+    for(auto &_Enrutador : NuevaRed)
     {
         vector<string> Nombres=_Enrutador.second.NombresContiguos, Costes=_Enrutador.second.CostesContiguos;
         vector<string> Unicos;
@@ -293,10 +408,10 @@ void Red::ActualizarTabla()
 {
     map<string, vector<vector<string>>> Tabla;
     //Se buscan posibles enrutadores dañados
-    auto Pos=Enrutadores.begin();
-    for(auto EnrutadorActual : Enrutadores)
+    map<string, Enrutador>::iterator Pos=Enrutadores.begin();
+    for(auto &[Clave, Valor] : Enrutadores)
     {
-        if(EnrutadorActual.second.NombresContiguos.size()==0)
+        if(Valor.NombresContiguos.size()==0)
         {
             Enrutadores.erase(Pos);
         }
@@ -392,10 +507,10 @@ void Red::ActualizarTabla()
                 Enrutadores[TablaActual.first].Tabla[_Enrutador]=Dato;
             }
         }*/
-    for(auto EnrutadorActual : Enrutadores)
+    for(auto &[Clave, Valor] : Enrutadores)
     {
         //Inicializacion de las variables para este enrutador
-        string NodoPrincipal=EnrutadorActual.first;
+        string NodoPrincipal=Clave;
         //Comienzo de los nodos y la informacion que se guardará en la tabla
         map<string, vector<vector<string>>> Nodos;
         Nodos[NodoPrincipal]={{NodoPrincipal},{"0"}};
@@ -410,17 +525,17 @@ void Red::ActualizarTabla()
             vector<string> CostesNodosAdyacentes=Enrutadores[NodoActual].CostesContiguos;
             vector<string> NodoAdyacenteActual;
             auto PosicionCoste=CostesNodosAdyacentes.begin();
-            string _NodoSiguiente;
-            for(auto NombreAdyacente : NodosAdyacentes)
+            //string _NodoSiguiente={};
+            for(string &NombreAdyacente : NodosAdyacentes)
             {
                 if(NodosEtiquetados.find(NombreAdyacente)==NodosEtiquetados.end() or NodosEtiquetados.find(NombreAdyacente)==NodosEtiquetados.begin())
                 {
-                    string CosteAcumulado;
-                    auto Valores=Nodos[NodoActual];
-                    for(auto Caracter : Valores[1])// Busqueda del coste acumulado
+                    vector<vector<string>> Valores=Nodos[NodoActual];
+                    string CosteAcumulado=Valores[1][0];
+                    /*for(string Caracter : Valores[1])// Busqueda del coste acumulado
                     {
                         CosteAcumulado=Caracter;
-                    }
+                    }*/
                     CosteAcumulado=to_string(ConvertirANumero(CosteAcumulado)+ConvertirANumero(*PosicionCoste));
                     string _NodoActual=NombreAdyacente;
                     NodoAdyacenteActual.push_back(NodoActual);
@@ -428,7 +543,7 @@ void Red::ActualizarTabla()
                     {
                         vector<vector<string>> InformacionActual=Nodos[_NodoActual];
                         vector<string> _CosteAcumulado, _NombreProbable;
-                        for(auto Caracter : InformacionActual[1])
+                        for(string &Caracter : InformacionActual[1])
                         {
                             if(ConvertirANumero(Caracter)>ConvertirANumero(CosteAcumulado))
                             {
@@ -448,20 +563,20 @@ void Red::ActualizarTabla()
             }
             NodosEtiquetados[NodoActual]=true;
             // Cambiar el nodo actual;
-            int ValorSiguiente=INFINITY;
-            for(auto Nodo : Nodos)
+            int ValorSiguiente=2147483647;
+            for(auto &[Clave, Valor] : Nodos)
             {
-                if(NodosEtiquetados.find(Nodo.first)==NodosEtiquetados.end())
+                if(NodosEtiquetados.find(Clave)==NodosEtiquetados.end())
                 {
-                    vector<vector<string>> Informacion=Nodo.second;
+                    vector<vector<string>> Informacion=Valor;
                     vector<string> NombresNuevos, ValoresNuevos;
                     NombresNuevos=Informacion[0];
                     ValoresNuevos=Informacion[1];
-                    for(auto Valor : ValoresNuevos)
+                    for(string &Valor : ValoresNuevos)
                     {
                         if(ConvertirANumero(Valor)<ValorSiguiente)
                         {
-                            NodoActual=Nodo.first;
+                            NodoActual=Clave;
                             ValorSiguiente=ConvertirANumero(Valor);
                         }
                     }
@@ -471,7 +586,42 @@ void Red::ActualizarTabla()
         }
         // Corriendo el algoritmo que organiza las rutas
         vector<string> Nombres, Rutas, CostesMinimos;
-        for(auto Mapa : Nodos)
+        for(auto &[Clave_temp, Valor_temp] : Nodos)
+        {
+            vector<vector<string>> Informacion=Valor_temp;
+            string NombreDelSiguienteMapa, ValorMinimo, Ruta;
+            Ruta+=Informacion[0][0];
+            NombreDelSiguienteMapa=Informacion[0][0];
+            ValorMinimo=Informacion[1][0];
+            /*for(string &Valor : Informacion[0])
+            {
+                Ruta+=Valor;
+                NombreDelSiguienteMapa=Valor;
+            }
+            for(string &Valor : Informacion[1])
+            {
+                ValorMinimo=Valor;
+            }*/
+            while(NombreDelSiguienteMapa!=Clave)
+            {
+                vector<vector<string>> LugarActual=Nodos[NombreDelSiguienteMapa];
+                for(vector<string> &Dato: LugarActual)
+                {
+                    Ruta+=Dato[0];
+                    NombreDelSiguienteMapa=Dato[0];
+                    /*for(string &Caracter: Dato)
+                    {
+                        Ruta+=Caracter;
+                        NombreDelSiguienteMapa=Caracter;
+                    }*/
+                    break;
+                }
+            }
+            Nombres.push_back(Clave_temp);
+            Rutas.push_back(Ruta);
+            CostesMinimos.push_back(ValorMinimo);
+        }
+        /*for(auto Mapa : Nodos)
         {
             vector<vector<string>> Informacion=Nodos[Mapa.first];
             string NombreDelSiguienteMapa, ValorMinimo, Ruta;
@@ -484,7 +634,7 @@ void Red::ActualizarTabla()
             {
                 ValorMinimo=Valor;
             }
-            while(NombreDelSiguienteMapa!=EnrutadorActual.first)
+            while(NombreDelSiguienteMapa!=Clave)
             {
                 vector<vector<string>> LugarActual=Nodos[NombreDelSiguienteMapa];
                 for( auto Dato: LugarActual)
@@ -500,16 +650,16 @@ void Red::ActualizarTabla()
             Nombres.push_back(Mapa.first);
             Rutas.push_back(Ruta);
             CostesMinimos.push_back(ValorMinimo);
-        }
+        }*/
         Tabla[NodoPrincipal]={Nombres,Rutas,CostesMinimos};
     }
-    for(auto TablaActual : Tabla)
+    for(auto &[Clave, Valor] : Tabla)
     {
         int i=0;
-        for(string _Enrutador: TablaActual.second[0])
+        for(string &_Enrutador: Valor[0])
         {
-            vector<string> Dato={TablaActual.second[1][i], TablaActual.second[2][i++]};
-            Enrutadores[TablaActual.first].Tabla[_Enrutador]=Dato;
+            vector<string> Dato={Valor[1][i], Valor[2][i++]};
+            Enrutadores[Clave].Tabla[_Enrutador]=Dato;
         }
     }
 }
@@ -548,12 +698,12 @@ void Red::Agregar()
                     throw 0;
                 Enrutador NuevoEnrutador(NEP);
                 int i=0;
-                for(string Equipo : EquiposCo)
+                for(string &Equipo : EquiposCo)
                 {
                     NuevoEnrutador.AgregarEnrutador(false, Equipo, CosteEq[i]);
                     i++;
                 }
-                auto Exito=Enrutadores.insert({NEP, NuevoEnrutador});
+                auto Exito=Enrutadores.insert({NEP, NuevoEnrutador});//Par Mapa-Bool
                 if(!Exito.second)
                 {
                     cout << "El enrutador ingresado ya se encuentra en la red" << endl;
@@ -562,7 +712,7 @@ void Red::Agregar()
                 else // Función para ingresar los datos de los enrutadores adyacentes
                 {
                     i=0;
-                    for(auto enrutador : EquiposCo)
+                    for(string &enrutador : EquiposCo)
                     {
                         Enrutadores[enrutador].AgregarEnrutador(false, NEP, CosteEq[i]);
                         i++;
@@ -603,14 +753,14 @@ void Red::Eliminar()
                 cout << "Ingrese una de las opciones validas, o 0 para salir" << endl;
             }
             else
-            {
-                cout << "Se ha eliminado exitosamente" << endl;
-                for(auto Enrutador: Enrutadores) // Busqueda entre los enrutadores
+            {                
+                for(auto &[Clave, Valor]: Enrutadores) // Busqueda entre los enrutadores
                 {
-                    Enrutador.second.EliminarEnrutador(false, Opcion);
-                    Enrutador.second.Tabla.erase(Enrutador.second.Tabla.find(Opcion));
-                    Enrutadores[Enrutador.first]=Enrutador.second;
+                    Valor.EliminarEnrutador(false, Opcion);
+                    Valor.Tabla.erase(Valor.Tabla.find(Opcion));
+                    Enrutadores[Clave]=Valor;
                 }
+                cout << "Se ha eliminado exitosamente" << endl;
             }
         }
     }while(Opcion!="0");
@@ -622,9 +772,9 @@ void Red::Eliminar()
 
 void Red::MostrarNombres()
 {
-    for(auto EnrutadorActual : Enrutadores)
+    for(auto &[Clave, Valor] : Enrutadores)
     {
-        cout << EnrutadorActual.first << endl;
+        cout << Clave << endl;
     }
 }
 

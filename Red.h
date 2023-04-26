@@ -18,7 +18,6 @@ public:
 private:
     bool RedAleatiora=false;
     map<string, Enrutador> Enrutadores; // Clave: Nombre del enrutador. Valor: Lista de los enrutadores que están conectados a el
-    //map<string, vector<vector<string>>> Tabla{}; //Clave: Nombre del enrutador. Valor: Lista con todos los enrutadores de la red y su costo mínimo
     void CargarRed();
     void ActualizarTabla();
     void GenerarRed();
