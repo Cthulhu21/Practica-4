@@ -373,16 +373,43 @@ void Red::GenerarRed()
             Posicion++;
         }
     }*/
+    for(auto &[Clave, Valor] : NuevaRed)
+    {
+        vector<string> Nombres=Valor.NombresContiguos, Costes=Valor.CostesContiguos;
+        vector<string> Unicos;
+        vector<string> CosteUnicos;
+        auto Pos=Costes.begin();
+        for(string &Nombre : Nombres)
+        {
+            bool i=false;
+            for(string &Unico : Unicos)
+            {
+                if(Unico==Nombre)
+                {
+                    i=true;
+                }
+            }
+            if(!i)
+            {
+                Unicos.push_back(Nombre);
+                CosteUnicos.push_back(*Pos);
+            }
+            Pos++;
+        }
+        NuevaRed[Clave].NombresContiguos=Unicos;
+        NuevaRed[Clave].CostesContiguos=CosteUnicos;
+    }
+    /*
     for(auto &_Enrutador : NuevaRed)
     {
         vector<string> Nombres=_Enrutador.second.NombresContiguos, Costes=_Enrutador.second.CostesContiguos;
         vector<string> Unicos;
         vector<string> CosteUnicos;
         auto Pos=Costes.begin();
-        for(string Nombre : Nombres)
+        for(string &Nombre : Nombres)
         {
             bool i=false;
-            for(string Unico : Unicos)
+            for(string &Unico : Unicos)
             {
                 if(Unico==Nombre)
                 {
@@ -399,6 +426,7 @@ void Red::GenerarRed()
         NuevaRed[_Enrutador.first].NombresContiguos=Unicos;
         NuevaRed[_Enrutador.first].CostesContiguos=CosteUnicos;
     }
+    */
     RedActiva=true;
     Enrutadores=NuevaRed;
     ActualizarTabla();
@@ -413,100 +441,9 @@ void Red::ActualizarTabla()
     {
         if(Valor.NombresContiguos.size()==0)
         {
-            Enrutadores.erase(Pos);
+            Enrutadores.erase(Pos++);
         }
-        Pos++;
     }
-    /*for(auto EnrutadorActual :Enrutadores)
-    {
-        bool Terminado=false;
-
-        string NombreNodoPrincipalActual=EnrutadorActual.first;
-        map<string, pair<string, int>> Nodos;
-        map<string, bool> NodosEtiquetados;
-
-        Nodos[NombreNodoPrincipalActual]={{NombreNodoPrincipalActual},0};
-        NodosEtiquetados[NombreNodoPrincipalActual]=true;
-
-        while(!Terminado)
-        {
-            vector<string> NombresNodosAdyacentes=Enrutadores[NombreNodoPrincipalActual].NombresContiguos;
-            vector<string> CostesNodosAdyacentes=Enrutadores[NombreNodoPrincipalActual].CostesContiguos;
-            string SiguienteNodo;
-            int i=0;
-            for(string NombreNodo: NombresNodosAdyacentes)
-            {
-
-                if(NodosEtiquetados.find(NombreNodo)==NodosEtiquetados.end())
-                {
-                    int CosteAcumulado=Nodos[NombreNodo].second;
-                    CosteAcumulado+=ConvertirANumero(CostesNodosAdyacentes[i]);
-                    SiguienteNodo=NombreNodo;
-                    if(Nodos.find(SiguienteNodo)!=Nodos.end())
-                    {
-                        pair<string, int> Informacion=Nodos[SiguienteNodo];
-                        string Nombre=Informacion.first;
-                        int Coste=Informacion.second;
-                        if(Coste>CosteAcumulado)
-                        {
-                            Coste=CosteAcumulado;
-                            Nombre=NombreNodoPrincipalActual;
-                            Nodos[NombreNodo]={Nombre,Coste};
-                        }
-                    }
-                    else
-                    {
-                        Nodos[NombreNodo]={NombreNodo, CosteAcumulado};
-                    }
-                }
-                i++;
-            }
-            NodosEtiquetados[NombreNodoPrincipalActual]=true;
-            int ValorSiguiente=INT_MAX;
-            for(auto Nodo : Nodos)
-            {
-                string Nombre=Nodo.first;
-                if(NodosEtiquetados.find(Nombre)==NodosEtiquetados.end())
-                {
-                    pair<string, int> Informacion=Nodo.second;
-                    string NuevoNombre=Informacion.first;
-                    int NuevoCoste=Informacion.second;
-                    if(NuevoCoste<ValorSiguiente)
-                    {
-                        NombreNodoPrincipalActual=Nodo.first;
-                        ValorSiguiente=NuevoCoste;
-                    }
-                }
-            }
-            Terminado=(Nodos.size()>=Enrutadores.size())? true : false;
-        }
-        vector<string> Nombres, Rutas, CostesMinimos;
-        for(auto Nodo : Nodos)
-        {
-            string Ruta{};
-            string NombreSiguiente=get<0>(Nodo.second);
-            int ValorMinimo=get<1>(Nodo.second);
-            Ruta+=NombreSiguiente;
-            while(NombreSiguiente!=EnrutadorActual.first)
-            {
-                string Nombre=get<0>(Nodos[NombreSiguiente]);
-                Ruta+=Nombre;
-                NombreSiguiente=Nombre;
-            }
-            Nombres.push_back(Nodo.first);
-            Rutas.push_back(Ruta);
-            CostesMinimos.push_back(to_string(ValorMinimo));
-        }
-        Tabla[NombreNodoPrincipalActual]={Nombres,Rutas,CostesMinimos};
-        for(auto TablaActual : Tabla)
-        {
-            int i=0;
-            for(string _Enrutador: TablaActual.second[0])
-            {
-                vector<string> Dato={TablaActual.second[1][i], TablaActual.second[2][i++]};
-                Enrutadores[TablaActual.first].Tabla[_Enrutador]=Dato;
-            }
-        }*/
     for(auto &[Clave, Valor] : Enrutadores)
     {
         //Inicializacion de las variables para este enrutador
@@ -523,19 +460,14 @@ void Red::ActualizarTabla()
         {
             vector<string> NodosAdyacentes=Enrutadores[NodoActual].NombresContiguos;
             vector<string> CostesNodosAdyacentes=Enrutadores[NodoActual].CostesContiguos;
-            vector<string> NodoAdyacenteActual;
+            vector<string> NodoAdyacenteActual={};
             auto PosicionCoste=CostesNodosAdyacentes.begin();
-            //string _NodoSiguiente={};
             for(string &NombreAdyacente : NodosAdyacentes)
             {
                 if(NodosEtiquetados.find(NombreAdyacente)==NodosEtiquetados.end() or NodosEtiquetados.find(NombreAdyacente)==NodosEtiquetados.begin())
                 {
                     vector<vector<string>> Valores=Nodos[NodoActual];
                     string CosteAcumulado=Valores[1][0];
-                    /*for(string Caracter : Valores[1])// Busqueda del coste acumulado
-                    {
-                        CosteAcumulado=Caracter;
-                    }*/
                     CosteAcumulado=to_string(ConvertirANumero(CosteAcumulado)+ConvertirANumero(*PosicionCoste));
                     string _NodoActual=NombreAdyacente;
                     NodoAdyacenteActual.push_back(NodoActual);
@@ -593,15 +525,6 @@ void Red::ActualizarTabla()
             Ruta+=Informacion[0][0];
             NombreDelSiguienteMapa=Informacion[0][0];
             ValorMinimo=Informacion[1][0];
-            /*for(string &Valor : Informacion[0])
-            {
-                Ruta+=Valor;
-                NombreDelSiguienteMapa=Valor;
-            }
-            for(string &Valor : Informacion[1])
-            {
-                ValorMinimo=Valor;
-            }*/
             while(NombreDelSiguienteMapa!=Clave)
             {
                 vector<vector<string>> LugarActual=Nodos[NombreDelSiguienteMapa];
@@ -609,11 +532,6 @@ void Red::ActualizarTabla()
                 {
                     Ruta+=Dato[0];
                     NombreDelSiguienteMapa=Dato[0];
-                    /*for(string &Caracter: Dato)
-                    {
-                        Ruta+=Caracter;
-                        NombreDelSiguienteMapa=Caracter;
-                    }*/
                     break;
                 }
             }
@@ -621,36 +539,6 @@ void Red::ActualizarTabla()
             Rutas.push_back(Ruta);
             CostesMinimos.push_back(ValorMinimo);
         }
-        /*for(auto Mapa : Nodos)
-        {
-            vector<vector<string>> Informacion=Nodos[Mapa.first];
-            string NombreDelSiguienteMapa, ValorMinimo, Ruta;
-            for(auto Valor : Informacion[0])
-            {
-                Ruta+=Valor;
-                NombreDelSiguienteMapa=Valor;
-            }
-            for(auto Valor : Informacion[1])
-            {
-                ValorMinimo=Valor;
-            }
-            while(NombreDelSiguienteMapa!=Clave)
-            {
-                vector<vector<string>> LugarActual=Nodos[NombreDelSiguienteMapa];
-                for( auto Dato: LugarActual)
-                {
-                    for(auto Caracter: Dato)
-                    {
-                        Ruta+=Caracter;
-                        NombreDelSiguienteMapa=Caracter;
-                    }
-                    break;
-                }
-            }
-            Nombres.push_back(Mapa.first);
-            Rutas.push_back(Ruta);
-            CostesMinimos.push_back(ValorMinimo);
-        }*/
         Tabla[NodoPrincipal]={Nombres,Rutas,CostesMinimos};
     }
     for(auto &[Clave, Valor] : Tabla)
@@ -820,13 +708,13 @@ void Red::Modificar()
 
 void Red::MostrarCostes()
 {
-    for (auto Enrutador: Enrutadores)
+    for (auto &[Clave, Valor]: Enrutadores)
     {
-        cout << "Los costes de enrutadores adyacentes a " << Enrutador.first << " son: " << endl;
-        vector<string> Nombres=Enrutador.second.NombresContiguos;
-        vector<string> Costes=Enrutador.second.CostesContiguos;
+        cout << "Los costes de enrutadores adyacentes a " << Clave << " son: " << endl;
+        vector<string> Nombres=Valor.NombresContiguos;
+        vector<string> Costes=Valor.CostesContiguos;
         int i=0;
-        for(string Nombre : Nombres)
+        for(string &Nombre : Nombres)
         {
             cout << Nombre << " :" << Costes[i++] << endl;
         }
@@ -844,9 +732,9 @@ void Red::MostrarTabla()
     {
         cout << "Los caminos mas cortos de " << Opcion << " son:" <<endl;
         map<string, vector<string>> _Tabla=Enrutadores[Opcion].Tabla;
-        for(auto Elemento: _Tabla)
+        for(auto &[Clave, Valor]: _Tabla)
         {
-            cout << Elemento.first << " : " << Elemento.second[0] << " con coste total " << Elemento.second[1] << endl;;
+            cout << Clave << " : " << Valor[0] << " con coste total " << Valor[1] << endl;;
         }
     }
 }
